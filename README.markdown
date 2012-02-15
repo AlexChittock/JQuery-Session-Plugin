@@ -1,8 +1,8 @@
-* JQuery Session Plugin *
+#JQuery Session Plugin
 Provides a simple interface into window.sessionStorage while providing limited support for cross protocol requests.
 
-** Usage **
-`
+##Usage
+```
 $.session.set('some key', 'a value');
 
 $.session.get('some key');
@@ -20,3 +20,4 @@ $.session.delete('some key');
 
 $.session.get('some key');
 > undefined
+```
