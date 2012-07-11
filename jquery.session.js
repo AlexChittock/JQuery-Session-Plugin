@@ -1,6 +1,6 @@
 (function($){
 
-	$.session = {
+    $.session = {
 
         _id: null,
 
@@ -12,19 +12,21 @@
                 window.name = Math.random();
             }
             this._id = window.name;
+            this._initCache();
 
             // See if we've changed protcols
 
             var matches = (new RegExp(this._generatePrefix() + "=([^;]+);")).exec(document.cookie);
             if (matches && document.location.protocol !== matches[1]) {
-               window.sessionStorage.clear();
-               this._initCache();
+               this._clearSession();
                for (var key in this._cookieCache) {
-                   window.sessionStorage.setItem(key, this._cookieCache[key])
+                   try {
+                   window.sessionStorage.setItem(key, this._cookieCache[key]);
+                   } catch (e) {};
                }
             }
 
-            document.cookie = this._generatePrefix() + "=" + document.location.protocol + ';path=/';
+            document.cookie = this._generatePrefix() + "=" + document.location.protocol + ';path=/;expires=' + (new Date((new Date).getTime() + 120000)).toUTCString();
 
         },
 
@@ -45,9 +47,15 @@
             }
         },
 
-        _setFallback: function(key, value)
+        _setFallback: function(key, value, onceOnly)
         {
-            document.cookie = this._generatePrefix() + key + "=" + value + ";path=/";
+            var cookie = this._generatePrefix() + key + "=" + value + "; path=/";
+            if (onceOnly) {
+                cookie += "; expires=" + (new Date(Date.now() + 120000)).toUTCString();
+            }
+            document.cookie = cookie;
+            this._cookieCache[key] = value;
+            return this;
         },
 
         _getFallback: function(key)
@@ -61,44 +69,59 @@
         _clearFallback: function()
         {
             for (var i in this._cookieCache) {
-                document.cookie = this._generatePrefix() + i + '=;path=/';
+                document.cookie = this._generatePrefix() + i + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             }
-            this._cookieCache = undefined;
+            this._cookieCache = {};
         },
 
         _deleteFallback: function(key)
         {
-            document.cookie = this._generatePrefix() + key + '=' + undefined;
+            document.cookie = this._generatePrefix() + key + '=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             delete this._cookieCache[key];
         },
 
-		get: function(key)
-		{
-			return window.sessionStorage.getItem(key) || this._getFallback(key);
-		},
+        get: function(key)
+        {
+            return window.sessionStorage.getItem(key) || this._getFallback(key);
+        },
 
-		set: function(key, value)
-		{
-			window.sessionStorage.setItem(key, value);
-            this._setFallback(key, value);
-			return this;
-		},
+        set: function(key, value, onceOnly)
+        {
+            try {
+                window.sessionStorage.setItem(key, value);
+            } catch (e) {}
+            this._setFallback(key, value, onceOnly || false);
+            return this;
+        },
 
-		'delete': function(key)
-		{
-			window.sessionStorage.removeItem(key);
+        'delete': function(key)
+        {
+            try {
+            window.sessionStorage.removeItem(key);
+            } catch (e) {};
             this._deleteFallback(key);
-			return this;
-		},
+            return this;
+        },
 
-		clear: function()
-		{
-			window.sessionStorage.clear();
+        _clearSession: function()
+        {
+          try {
+                window.sessionStorage.clear();
+            } catch (e) {
+                for (var i in window.sessionStorage) {
+                    window.sessionStorage.removeItem(i);
+                }
+            }
+        },
+
+        clear: function()
+        {
+            this._clearSession();
             this._clearFallback();
-			return this;
-		}
+            return this;
+        }
 
-	};
+    };
 
     $.session._init();
 
