@@ -93,8 +93,12 @@
             this._setFallback(key, value, onceOnly || false);
             return this;
         },
+        
+        'delete': function(key){
+            return this.remove(key);
+        },
 
-        'delete': function(key)
+        remove: function(key)
         {
             try {
             window.sessionStorage.removeItem(key);
