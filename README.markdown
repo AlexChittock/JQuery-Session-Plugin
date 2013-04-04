@@ -16,7 +16,7 @@ $.session.get('some key');
 $.session.set('some key', 'a value').get('some key');
 > "a value"
 
-$.session.delete('some key');
+$.session.remove('some key');
 
 $.session.get('some key');
 > undefined
