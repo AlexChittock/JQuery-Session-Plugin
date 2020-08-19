@@ -89,8 +89,10 @@
         {
             try {
                 window.sessionStorage.setItem(key, value);
-            } catch (e) {}
-            this._setFallback(key, value, onceOnly || false);
+            } catch (e) {
+                // doing it after catch defeats purpose of fallback
+                this._setFallback(key, value, onceOnly || false);
+            }
             return this;
         },
         
@@ -102,7 +104,7 @@
         {
             try {
             window.sessionStorage.removeItem(key);
-            } catch (e) {};
+            } catch (e) {}; //here it's correct because get() returns value from any source
             this._deleteFallback(key);
             return this;
         },
